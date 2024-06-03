@@ -14,7 +14,10 @@ router.post(
   '/register',
   [
     check('phone', 'Phone number is required').not().isEmpty(),
+    check('phone', 'Phone number must be exactly 10 digits').isLength({ min: 10, max: 10 }),
+    check('phone', 'Phone number must be numeric').isNumeric(),
     check('password', 'Password is required').isLength({ min: 6 }),
+    check('referralCode', 'Referral code is required').exists()
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -22,21 +25,35 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { phone, password } = req.body;
+    const { phone, password, referralCode } = req.body;
 
     try {
+      // Check if the referral code is valid (example validation logic)
+      if (referralCode !== 'welcome') {
+        return res.status(400).json({ msg: 'Invalid referral code' });
+      }
+
+      // Check if the user already exists
       let user = await User.findOne({ phone });
       if (user) {
         return res.status(400).json({ msg: 'User already exists' });
       }
 
-      user = new User({ phone, password });
+      // Create a new user
+      user = new User({
+        phone,
+        password,
+        role: 'USER', // Default role
+      });
 
+      // Hash the password
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
 
+      // Save the new user
       await user.save();
 
+      // Generate JWT token
       const payload = { user: { id: user.id } };
       jwt.sign(payload, 'yourSecretToken', { expiresIn: 360000 }, (err, token) => {
         if (err) throw err;
@@ -54,6 +71,8 @@ router.post(
   '/login',
   [
     check('phone', 'Phone number is required').not().isEmpty(),
+    check('phone', 'Phone number must be exactly 10 digits').isLength({ min: 10, max: 10 }),
+    check('phone', 'Phone number must be numeric').isNumeric(),
     check('password', 'Password is required').exists(),
   ],
   async (req, res) => {
