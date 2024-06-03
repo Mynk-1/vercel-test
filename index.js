@@ -3,21 +3,29 @@ const connectToDatabase = require('./db');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const User = require("./models/Users")
+const User = require("./models/Users");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-
 // Load environment variables from .env file
-dotenv.config(); 
+dotenv.config();
 
 // Connect to the database
 connectToDatabase();
 
-app.use(bodyParser.json());
-app.use(cors());
+const corsOptions = {
+  origin: "http://localhost:5173", // Allow requests from localhost:5173
+  methods: ['GET', 'POST'], // Allow only GET and POST requests
+};
 
+app.use(cors(corsOptions));
+app.use(bodyParser.json());
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// Example GET endpoint
 app.get('/', async (req, res) => {
   try {
     const items = await User.find({});
@@ -27,6 +35,7 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Example POST endpoint
 const authRoutes = require('./routes/auth.js');
 app.use('/api', authRoutes);
 
