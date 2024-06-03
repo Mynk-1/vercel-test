@@ -1,9 +1,16 @@
 const express = require('express');
+const mongoose = require('./db');
+const Item = require('./models/Item');
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.json({"success":"server started successfully"});
+app.get('/', async (req, res) => {
+  try {
+    const items = await Item.find({});
+    res.send(items);
+  } catch (error) {
+    res.status(500).send('Error connecting to database');
+  }
 });
 
 app.listen(port, () => {
