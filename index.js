@@ -1,12 +1,14 @@
 const express = require('express');
 const connectToDatabase = require('./db');
-const Item = require('./models/items.js');
+const Item = require('./models/Item.js');
 const app = express();
 const port = process.env.PORT || 3000;
 const dotenv = require('dotenv');
 
-// Connect to the database
+// Load environment variables from .env file
 dotenv.config(); 
+
+// Connect to the database
 connectToDatabase();
 
 app.get('/', async (req, res) => {
