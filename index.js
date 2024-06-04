@@ -16,7 +16,8 @@ connectToDatabase();
 
 const corsOptions = {
   origin: "http://localhost:5173", // Allow requests from localhost:5173
-  methods: ['GET', 'POST'], // Allow only GET and POST requests
+  methods: ['GET', 'POST'],
+  credentials: true // Allow only GET and POST requests
 };
 
 app.use(cors(corsOptions));

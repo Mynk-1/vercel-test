@@ -21,8 +21,11 @@ router.post(
   ],
   async (req, res) => {
     const errors = validationResult(req);
+
+    // Separate validation errors from other errors
     if (!errors.isEmpty()) {
-      return res.json({ errors: errors.array() });
+      const validationErrors = errors.array().map(error => error.msg);
+      return res.status(400).json({ validationErrors });
     }
 
     const { phone, password, referralCode } = req.body;
@@ -30,13 +33,13 @@ router.post(
     try {
       // Check if the referral code is valid (example validation logic)
       if (referralCode !== 'welcome') {
-        return res.json({ msg: 'Invalid referral code' });
+        return res.status(400).json({ msg: 'Invalid referral code' });
       }
 
       // Check if the user already exists
       let user = await User.findOne({ phone });
       if (user) {
-        return res.json({ msg: 'User already exists' });
+        return res.status(400).json({ msg: 'User already exists' });
       }
 
       // Create a new user
@@ -57,15 +60,17 @@ router.post(
       const payload = { user: { id: user.id } };
       jwt.sign(payload, 'yourSecretToken', { expiresIn: 360000 }, (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        // Send JWT token as a cookie
+        res.cookie('token', token, { httpOnly: true }).json({ user: { id: user.id, phone: user.phone, role: user.role } });
+        // Send a success response with user data
       });
     } catch (err) {
       console.error(err.message);
-      res.send('Server error');
+      // Send a server error response
+      res.status(500).send('Server error');
     }
   }
 );
-
 // Login route
 router.post(
   '/login',
