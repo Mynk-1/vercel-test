@@ -33,13 +33,13 @@ router.post(
     try {
       // Check if the referral code is valid (example validation logic)
       if (referralCode !== 'welcome') {
-        return res.status(400).json({ msg: 'Invalid referral code' });
+        return res.status(201).json({ msg: 'Invalid referral code' });
       }
 
       // Check if the user already exists
       let user = await User.findOne({ phone });
       if (user) {
-        return res.status(400).json({ msg: 'User already exists' });
+        return res.status(201).json({ msg: 'User already exists' });
       }
 
       // Create a new user
