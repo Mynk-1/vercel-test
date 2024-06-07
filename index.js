@@ -15,9 +15,9 @@ dotenv.config();
 connectToDatabase();
 
 const corsOptions = {
-  origin: "http://localhost:5173", // Allow requests from localhost:5173
-  methods: ['GET', 'POST'],
-  credentials: true // Allow only GET and POST requests
+  origin: 'https://gaming-world-sigma.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true // Include credentials in CORS requests (if required)
 };
 
 app.use(cors(corsOptions));
