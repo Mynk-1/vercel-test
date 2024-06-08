@@ -102,7 +102,7 @@ router.post(
       const payload = { user: { id: user.id } };
       jwt.sign(payload, 'yourSecretToken', { expiresIn: 360000 }, (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.cookie('token', token, { httpOnly: true }).json({ token });
       });
     } catch (err) {
       console.error(err.message);

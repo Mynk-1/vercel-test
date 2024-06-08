@@ -35,6 +35,19 @@ app.get('/', async (req, res) => {
     res.status(500).send('Error connecting to database');
   }
 });
+app.get('/auth-check', (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).send('Not authenticated');
+  }
+
+  try {
+    const decoded = jwt.verify(token, 'your_jwt_secret');
+    res.status(200).json({ authenticated: true, user: decoded });
+  } catch (err) {
+    res.status(401).send('Not authenticated');
+  }
+});
 
 // Example POST endpoint
 const authRoutes = require('./routes/auth.js');
