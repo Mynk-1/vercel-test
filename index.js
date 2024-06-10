@@ -4,6 +4,9 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const User = require("./models/Users");
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const Users = require("./models/Users.js")
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,13 +18,14 @@ dotenv.config();
 connectToDatabase();
 
 const corsOptions = {
-  origin: 'https://gaming-world-sigma.vercel.app',
+  origin: ['https://gaming-world-sigma.vercel.app',"http://localhost:5173"],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true // Include credentials in CORS requests (if required)
 };
 
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // Handle preflight requests
 app.options('*', cors(corsOptions));
@@ -35,18 +39,31 @@ app.get('/', async (req, res) => {
     res.status(500).send('Error connecting to database');
   }
 });
-app.get('/auth-check', (req, res) => {
+app.get('/api/authCheck', (req, res) => {
   const token = req.cookies.token;
+
   if (!token) {
-    return res.status(401).send('Not authenticated');
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  try {
-    const decoded = jwt.verify(token, 'your_jwt_secret');
-    res.status(200).json({ authenticated: true, user: decoded });
-  } catch (err) {
-    res.status(401).send('Not authenticated');
-  }
+  // Verify JWT token
+  jwt.verify(token, "yourSecretToken", (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = decoded.user.id; 
+    User.findById(userId)
+      .then(user => {
+        if (!user) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        res.status(200).json({ user });
+      })
+      .catch(err => {
+        console.error('Error finding user:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+      });
+  });
 });
 
 // Example POST endpoint

@@ -4,11 +4,12 @@ const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const User = require('../models/Users');
 
+
 const router = express.Router();
 
 // Registration route
 router.get("/",(req,res)=>{
-  res.json({"success":"app deployed successfully"})
+  return res.json({"success":"app deployed successfully"})
 })
 router.post(
   '/register',
@@ -31,45 +32,44 @@ router.post(
     const { phone, password, referralCode } = req.body;
 
     try {
-      // Check if the referral code is valid (example validation logic)
+      
       if (referralCode !== 'welcome') {
         return res.status(201).json({ msg: 'Invalid referral code' });
       }
 
-      // Check if the user already exists
+      
       let user = await User.findOne({ phone });
       if (user) {
         return res.status(201).json({ msg: 'User already exists' });
       }
 
-      // Create a new user
+      
       user = new User({
         phone,
         password,
-        role: 'USER', // Default role
+        role: 'USER',
       });
 
-      // Hash the password
+      
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
 
-      // Save the new user
+      
       await user.save();
 
-      // Generate JWT token
       const payload = { user: { id: user.id } };
       jwt.sign(payload, 'yourSecretToken', { expiresIn: 360000 }, (err, token) => {
         if (err) throw err;
-        // Send JWT token as a cookie
+  
         res.cookie('token', token, { httpOnly: true }).json({ user: { id: user.id, phone: user.phone, role: user.role } });
-        // Send a success response with user data
+        
       });
-    } catch (err) {
+      } catch (err) {
       console.error(err.message);
-      // Send a server error response
+      
       res.status(500).send('Server error');
+      }
     }
-  }
 );
 // Login route
 router.post(
@@ -100,9 +100,9 @@ router.post(
       }
 
       const payload = { user: { id: user.id } };
-      jwt.sign(payload, 'yourSecretToken', { expiresIn: 360000 }, (err, token) => {
+      jwt.sign(payload, 'yourSecretToken',{expiresIn:360000},(err,token)=>{
         if (err) throw err;
-        res.cookie('token', token, { httpOnly: true }).json({ token });
+        res.cookie('token',token,{ httpOnly: true }).json({ token });
       });
     } catch (err) {
       console.error(err.message);
@@ -110,5 +110,14 @@ router.post(
     }
   }
 );
+
+router.get('/logout', (req, res) => {
+  try {
+    res.clearCookie('token'); 
+    res.status(200).json({ msg: 'Logged out successfully' }); 
+  } catch (error) {
+    res.status(500).json({ msg: 'Failed to log out', error: error.message });
+  }
+});
 
 module.exports = router;
